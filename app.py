@@ -24,37 +24,52 @@ ch2o = st.slider("Daily water intake (CH2O)", 1, 3, 2)
 scc = st.selectbox("Monitors calorie intake (SCC)?", ["yes", "no"])
 faf = st.slider("Physical activity frequency (FAF)", 0, 3, 1)
 tue = st.slider("Time spent using tech daily (TUE)", 0, 3, 2)
-mtrans = st.selectbox("Primary transport mode (MTRANS)", ["Automobile", "Public_Transportation", "Walking"])
+mtrans = st.selectbox("Primary transport mode (MTRANS)", ["Bike", "MotorBike", "Public Transportation", "Walking"])
 
 # Create a DataFrame with the exact column names used in training
 input_df = pd.DataFrame([{
-    "Gender": gender,
-    "Age": age,
-    "Height": height,
-    "Weight": weight,
-    "family_history_with_overweight": family_history,
-    "FAVC": favc,
-    "FCVC": fcvc,
-    "NCP": ncp,
-    "CAEC": caec,
-    "CH2O": ch2o,
-    "SCC": scc,
-    "FAF": faf,
-    "TUE": tue,
-    "MTRANS": mtrans
+    "age": age,
+    "height": height,
+    "weight": weight,
+    "family_history_with_overweight": 1 if family_history == "yes" else 0,
+    "favc": 1 if favc == "yes" else 0,
+    "fcvc": fcvc,
+    "ncp": ncp,
+    "ch2o": ch2o,
+    "scc": 1 if scc == "yes" else 0,
+    "faf": faf,
+    "tue": tue,
+
+    # Gender (bool column, gender_Male is True for male, False for female)
+    "gender_Male": True if gender == "Male" else False,
+
+    # CAEC one-hot (bools)
+    "caec_Always": caec == "Always",
+    "caec_Frequently": caec == "Frequently",
+    "caec_Sometimes": caec == "Sometimes",
+
+    # MTRANS one-hot (booleans)
+    "mtrans_Bike": mtrans == "Bike",
+    "mtrans_Motorbike": mtrans == "Motorbike",
+    "mtrans_Public_Transportation": mtrans == "Public Transportation",
+    "mtrans_Walking": mtrans == "Walking"
 }])
 
 # Encode categorical fields using saved label encoders
-for col in input_df.columns:
-    if col in encoders:
-        input_df[col] = encoders[col].transform(input_df[col])
+#for col in input_df.columns:
+#    if col in encoders:
+#        input_df[col] = encoders[col].transform(input_df[col])
 
 # Predict on button click
 if st.button("Predict Obesity Risk"):
     prediction = model.predict(input_df)[0]
-    predicted_label = encoders["NObeyesdad"].inverse_transform([prediction])[0]
 
+    # Create reverse map
+    inverse_label_map = {v: k for k, v in encoders['nobeyesdad'].items()}
+    
+    predicted_label = inverse_label_map[int(prediction)]
     st.success(f"🏷️ Predicted Obesity Category: **{predicted_label}**")
+
 
 # Show accuracy note
 st.markdown("---")
