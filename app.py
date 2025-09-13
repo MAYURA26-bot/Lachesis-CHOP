@@ -4,11 +4,12 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 from sklearn.tree import plot_tree
+from recommendation import generate_recommendations 
 
 # --------------------- Page ---------------------
 st.set_page_config(page_title="Child Obesity Risk — Doctor-Style Interview", layout="centered")
-st.title("🧒 Childhood Obesity — Doctor-Style Adaptive Interview")
-st.caption("We’ll ask questions by topic (like a checkup). A surrogate Decision Tree picks the next topic. The RandomForest makes the final prediction.")
+st.title("🧒 Childhood Obesity : Doctor-Style Adaptive Interview")
+# questions by topic (like a checkup). A surrogate Decision Tree picks the next topic. The RandomForest makes the final prediction.")
 
 # --------------------- Load models ---------------------
 @st.cache_resource
@@ -140,7 +141,7 @@ def render_topic(topic: str) -> dict:
 
     # Vitals
     if topic == "Vitals":
-        if "age" in feats:       updates["age"] = slider("Age (years)", 5, 18, 1, 10)
+        if "age" in feats:       updates["age"] = slider("Age (years)", 14, 18, 1, 16)
         if "height" in feats:    updates["height"] = number("Height (meters)", 1.0, 2.2, 0.01, 1.45)
         if "weight" in feats:    updates["weight"] = number("Weight (kg)", 10.0, 200.0, 0.5, 45.0)
         if "gender_Male" in feats: updates["gender_Male"] = yesno("Gender: Male? (Yes for Male, No for Female)")
@@ -246,17 +247,33 @@ if st.session_state.phase == "done":
     try:
         pred = int(rf.predict(X_row)[0])
         st.success(f"🏷️ Final RandomForest prediction: **{inv_label.get(pred, str(pred))}**")
+
+        # --- Recommendations UI (nice tabs) ---
+        st.markdown("### 🧭 Recommendations")
+
+        recs = generate_recommendations(pred)  # pass the integer prediction
+
+        def _fmt(txt):
+            if txt is None or txt == "":
+                return "—"
+            if isinstance(txt, (list, tuple)):
+                return "\n".join([f"- {t}" for t in txt])
+            return str(txt)
+
+        if isinstance(recs, dict) and recs:
+            tab_food, tab_ex, tab_other = st.tabs(["🍎 Food / Drink", "🏃 Activity", "🧭 Other"])
+
+            with tab_food:
+                st.markdown(_fmt(recs.get("Food/Drink")))
+            with tab_ex:
+                st.markdown(_fmt(recs.get("Exercise")))
+            with tab_other:
+                st.markdown(_fmt(recs.get("Other")))
+
+            if "Note" in recs and recs["Note"]:
+                st.caption(recs["Note"])
+        else:
+            st.info("No recommendations available for this case.")
+
     except Exception as e:
         st.error(f"Prediction failed: {e}")
-
-# --------------------- Tree preview ---------------------
-st.markdown("---")
-st.subheader("🌳 Surrogate Tree (depth-4 preview)")
-try:
-    fig, ax = plt.subplots(figsize=(26, 14))
-    plot_tree(dt, feature_names=DT_FEATURES, class_names=CLASS_NAMES,
-              filled=True, impurity=False, max_depth=4, fontsize=14)
-    plt.tight_layout()
-    st.pyplot(fig, clear_figure=True)
-except Exception as e:
-    st.error(f"Tree plot failed: {e}")
