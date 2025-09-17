@@ -62,8 +62,8 @@ def reset_all():
 
 with st.sidebar:
     st.button("🔄 Reset interview", on_click=reset_all)
-    if FIDELITY is not None:
-        st.caption(f"Surrogate fidelity to RF: **{FIDELITY:.2%}**")
+    #if FIDELITY is not None:
+    #    st.caption(f"Surrogate fidelity to RF: **{FIDELITY:.2%}**")
 
 # --------------------- Helpers ---------------------
 def is_leaf(n: int) -> bool:
