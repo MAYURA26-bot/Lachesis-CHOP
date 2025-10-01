@@ -144,21 +144,25 @@ def render_topic(topic: str) -> dict:
         if "age" in feats:       updates["age"] = slider("Age (years)", 14, 18, 1, 16)
         if "height" in feats:    updates["height"] = number("Height (meters)", 1.0, 2.2, 0.01, 1.45)
         if "weight" in feats:    updates["weight"] = number("Weight (kg)", 10.0, 200.0, 0.5, 45.0)
-        if "gender_Male" in feats: updates["gender_Male"] = yesno("Gender: Male? (Yes for Male, No for Female)")
+        #if "gender_Male" in feats: updates["gender_Male"] = yesno("Gender: Male? (Yes for Male, No for Female)")
+        if "gender_Male" in feats:
+            gender = st.radio("Gender", ["Female", "Male"], horizontal=True, index=0)
+            updates["gender_Male"] = 1.0 if gender == "Male" else 0.0
+
         bmi = bmi_preview()
         if bmi:
             st.caption(f"Provisional BMI (for context only): **{bmi:.1f}**")
 
     # Diet
     if topic == "Diet":
-        if "favc" in feats:      updates["favc"] = yesno("Do you often eat high-calorie foods (FAVC)?")
+        if "favc" in feats:      updates["favc"] = yesno("Do you often eat high-calorie foods ?")
         if "fcvc" in feats:      updates["fcvc"] = slider("Vegetable intake (1 = rarely, 3 = daily)", 1, 3, 1, 2)
-        if "ncp" in feats:       updates["ncp"] = slider("Main meals per day (NCP)", 1, 6, 1, 3)
+        if "ncp" in feats:       updates["ncp"] = slider("Main meals per day ", 1, 6, 1, 3)
         if "ch2o" in feats:      updates["ch2o"] = slider("Daily water (liters)", 1, 5, 1, 2)
-        if "scc" in feats:       updates["scc"] = yesno("Do you monitor calorie intake (SCC)?")
+        if "scc" in feats:       updates["scc"] = yesno("Do you monitor calorie intake ?")
         # CAEC as single select → one-hots
         if any(f in feats for f in CAEC):
-            caec_choice = st.selectbox("Snacking between meals (CAEC)", ["Always","Frequently","Sometimes"], index=1)
+            caec_choice = st.selectbox("Snacking between meals ", ["Always","Frequently","Sometimes"], index=1)
             for k,opt in zip(CAEC, ["Always","Frequently","Sometimes"]):
                 updates[k] = 1.0 if caec_choice == opt else 0.0
 
